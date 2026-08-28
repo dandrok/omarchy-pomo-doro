@@ -58,7 +58,17 @@ Panel {
   readonly property string workIcon: setting("workIcon", "◈")
   readonly property string shortBreakIcon: setting("shortBreakIcon", "◇")
   readonly property string longBreakIcon: setting("longBreakIcon", "◆")
-  readonly property string idleIcon: setting("idleIcon", "󰔟")
+
+  // An empty hourglass for "nothing running", against the filled one that
+  // means a phase is in progress.
+  readonly property string idleIcon: setting("idleIcon", "󱎫")
+
+  // Nerd Font, not U+23F8 PAUSE. That codepoint is absent from JetBrainsMono
+  // Nerd Font - and from the Nerd Font patch generally - so it fell through to
+  // a colour emoji font and sat in the bar at the wrong weight and baseline
+  // next to every other glyph. This is the same pause mark the popup button
+  // uses, so the two agree.
+  readonly property string pausedIcon: setting("pausedIcon", "󰏤")
 
   // --- state mirrored from the session owner ------------------------------
 
@@ -120,7 +130,8 @@ Panel {
   }
 
   readonly property string barText: root.running
-    ? root.barGlyph + " " + root.remainingText + (root.paused ? " ⏸" : "")
+    ? root.barGlyph + " " + root.remainingText
+      + (root.paused ? " " + root.pausedIcon : "")
     : root.barGlyph
 
   readonly property string tooltip: {

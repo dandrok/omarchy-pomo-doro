@@ -136,7 +136,9 @@ Setup > Plugins. The file hot-reloads on save.
 | `defaultLongBreak` | `15` | |
 | `defaultTag` | `""` | Tag for sessions started from the bar; empty reuses the last one |
 | `terminalCommand` | `xdg-terminal-exec … pomo` | How the popup opens the terminal app |
-| `workIcon` / `shortBreakIcon` / `longBreakIcon` / `idleIcon` | `◈` `◇` `◆` `󰔟` | Bar glyphs |
+| `workIcon` / `shortBreakIcon` / `longBreakIcon` | `◈` `◇` `◆` | Phase glyphs, matching the terminal app and `current.txt` |
+| `idleIcon` | `󱎫` | Shown when no session is running |
+| `pausedIcon` | `󰏤` | Appended to the countdown while paused |
 
 Example:
 
@@ -156,6 +158,14 @@ The CLI already sends its own `notify-send` notification when a phase ends, so
 turning this on gives you each transition twice. Turn it on only if you prefer
 the shell's notifications, and mute the CLI's in the terminal app's Settings
 (`m` on the timer screen) first.
+
+### A note on glyphs
+
+Use Nerd Font glyphs, not emoji. `U+23F8 PAUSE` and friends are absent from the
+Nerd Font patch, so they fall back to a colour emoji font and sit at the wrong
+weight and baseline next to everything else in the bar. The phase glyphs are
+deliberately the plain geometric shapes the terminal app uses, so the bar and a
+tmux or starship line show the same symbol for the same phase.
 
 ## Troubleshooting
 

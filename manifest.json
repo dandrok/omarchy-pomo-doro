@@ -7,7 +7,9 @@
   "license": "ISC",
   "description": "Live pomodoro countdown in the bar, sharing one session with the pomo-doro terminal app",
   "homepage": "https://github.com/dandrok/omarchy-pomo-doro",
-  "kinds": ["bar-widget"],
+  "kinds": [
+    "bar-widget"
+  ],
   "entryPoints": {
     "barWidget": "Panel.qml"
   },
@@ -25,7 +27,12 @@
       "defaultFocus": 25,
       "defaultShortBreak": 5,
       "defaultLongBreak": 15,
-      "defaultTag": ""
+      "defaultTag": "",
+      "workIcon": "◈",
+      "shortBreakIcon": "◇",
+      "longBreakIcon": "◆",
+      "idleIcon": "󱎫",
+      "pausedIcon": "󰏤"
     },
     "schema": [
       {
@@ -104,7 +111,14 @@
       {
         "key": "idleIcon",
         "type": "string",
-        "label": "Idle glyph"
+        "label": "Idle glyph",
+        "description": "Shown when no session is running."
+      },
+      {
+        "key": "pausedIcon",
+        "type": "string",
+        "label": "Paused marker",
+        "description": "Appended to the countdown while paused. Use a Nerd Font glyph - U+23F8 PAUSE is not in the Nerd Font patch and falls back to a colour emoji."
       }
     ]
   }
