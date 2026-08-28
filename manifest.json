@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "id": "io.github.dandrok.pomo-doro",
+  "name": "Pomo Doro",
+  "version": "1.0.0",
+  "author": "dandrok",
+  "license": "ISC",
+  "description": "Live pomodoro countdown in the bar, sharing one session with the pomo-doro terminal app",
+  "homepage": "https://github.com/dandrok/omarchy-pomo-doro",
+  "kinds": ["bar-widget"],
+  "entryPoints": {
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "Pomo Doro",
+    "description": "Focus countdown with start, pause, skip and today's stats",
+    "category": "Productivity",
+    "allowMultiple": false,
+    "defaultSection": "right",
+    "defaults": {
+      "command": "pomo",
+      "hideWhenIdle": false,
+      "showSeconds": true,
+      "notifyPhaseChange": false,
+      "defaultFocus": 25,
+      "defaultShortBreak": 5,
+      "defaultLongBreak": 15,
+      "defaultTag": ""
+    },
+    "schema": [
+      {
+        "key": "command",
+        "type": "string",
+        "label": "CLI command",
+        "description": "The pomo-doro binary. Must be on the shell's PATH."
+      },
+      {
+        "key": "statePath",
+        "type": "string",
+        "label": "State file",
+        "description": "Override the session state file. Defaults to ~/.config/pomo-doro-nodejs/state.json."
+      },
+      {
+        "key": "hideWhenIdle",
+        "type": "bool",
+        "label": "Hide when idle",
+        "description": "Take no room in the bar unless a pomodoro is running."
+      },
+      {
+        "key": "showSeconds",
+        "type": "bool",
+        "label": "Show seconds",
+        "description": "Off shows whole minutes remaining, which is calmer to glance at."
+      },
+      {
+        "key": "notifyPhaseChange",
+        "type": "bool",
+        "label": "Notify on phase change",
+        "description": "Raise a shell notification when focus or a break ends. The CLI already sends its own - turn this on only after muting it in the app's Settings, or you get each transition twice."
+      },
+      {
+        "key": "defaultFocus",
+        "type": "int",
+        "label": "Focus minutes",
+        "description": "Used by the popup's Start button."
+      },
+      {
+        "key": "defaultShortBreak",
+        "type": "int",
+        "label": "Short break minutes"
+      },
+      {
+        "key": "defaultLongBreak",
+        "type": "int",
+        "label": "Long break minutes"
+      },
+      {
+        "key": "defaultTag",
+        "type": "string",
+        "label": "Default tag",
+        "description": "Tag applied to sessions started from the bar. Empty reuses the last one."
+      },
+      {
+        "key": "terminalCommand",
+        "type": "string",
+        "label": "Terminal command",
+        "description": "How the popup opens the full terminal UI."
+      },
+      {
+        "key": "workIcon",
+        "type": "string",
+        "label": "Focus glyph"
+      },
+      {
+        "key": "shortBreakIcon",
+        "type": "string",
+        "label": "Short break glyph"
+      },
+      {
+        "key": "longBreakIcon",
+        "type": "string",
+        "label": "Long break glyph"
+      },
+      {
+        "key": "idleIcon",
+        "type": "string",
+        "label": "Idle glyph"
+      }
+    ]
+  }
+}
