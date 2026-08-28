@@ -55,18 +55,40 @@ omarchy plugin add https://github.com/dandrok/omarchy-pomo-doro.git --enable
 ```
 
 Plugins land disabled so you can read the code first; `--enable` skips that.
-To install by hand instead:
-
-```bash
-git clone https://github.com/dandrok/omarchy-pomo-doro.git \
-  ~/.config/omarchy/plugins/io.github.dandrok.pomo-doro
-omarchy-shell shell rescanPlugins
-omarchy plugin enable io.github.dandrok.pomo-doro
-```
+Because the installed copy is a plain git checkout, `omarchy plugin update
+io.github.dandrok.pomo-doro` fast-forwards it later.
 
 Move it around the bar with `omarchy bar move io.github.dandrok.pomo-doro
 --section right`, and turn it off with `omarchy plugin disable
 io.github.dandrok.pomo-doro`.
+
+### From a local clone
+
+If you have the repo checked out and want to run your own edits, use the
+installer rather than `omarchy plugin add`:
+
+```bash
+git clone https://github.com/dandrok/omarchy-pomo-doro.git
+cd omarchy-pomo-doro
+./check.sh      # lint the QML and validate the manifest first
+./install.sh    # copy, rescan, restart, and report any load errors
+```
+
+`install.sh` copies the manifest and every `.qml` into
+`~/.config/omarchy/plugins/io.github.dandrok.pomo-doro/`, restarts the shell,
+and then reads the journal back — a plugin that fails to load does so silently
+otherwise, showing up only as a missing bar slot. Pass `--no-restart` to skip
+the restart.
+
+**Do not symlink the repo into the plugins directory.** The shell would
+discover it, but it watches that tree with `inotifywait -r`, which does not
+follow symlinks — so the plugin would load once and then never pick up an edit
+again. Re-run `./install.sh` after each change.
+
+And a restart really is needed for an update, not just a rescan: `omarchy-shell`
+is long-lived and Qt caches compiled QML per file URL, so an already-loaded
+`Panel.qml` keeps running the old build until the process restarts. Disabling
+and re-enabling does not help — it only flips a flag.
 
 ## Using it
 
@@ -151,9 +173,9 @@ predates the state file; upgrade it.
 controls. Most often `pomo` is not on the `PATH` the shell was started with;
 set `command` to an absolute path.
 
-**Nothing reloads after an edit.** Saving under `~/.config/omarchy/plugins/`
-reloads plugin code automatically. Force it with `omarchy-shell shell
-rescanPlugins`.
+**Nothing changes after an edit.** Re-run `./install.sh` — editing a local
+clone does not touch the installed copy, and an already-loaded `Panel.qml`
+needs a shell restart rather than a rescan.
 
 ## License
 
