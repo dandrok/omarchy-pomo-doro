@@ -20,6 +20,8 @@ Item {
     return panel.todayCompleted + " / " + panel.dailyGoal
   }
 
+  readonly property bool inputActiveFocus: todoList.inputActiveFocus
+
   Column {
     id: column
     anchors.left: parent.left
@@ -244,6 +246,13 @@ Item {
     Heatmap {
       width: parent.width
       days: panel.history14
+    }
+
+    PanelSeparator {}
+
+    TodoList {
+      id: todoList
+      width: parent.width
     }
   }
 }

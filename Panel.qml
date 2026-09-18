@@ -353,11 +353,12 @@ Panel {
     open: root.opened
     focusTarget: keyCatcher
     contentWidth: panel.fittedContentWidth(Style.space(340))
-    contentHeight: panel.fittedContentHeight(popupBody.implicitHeight, Style.space(560))
+    contentHeight: panel.fittedContentHeight(popupBody.implicitHeight, Style.space(680))
 
     PanelKeyCatcher {
       id: keyCatcher
       anchors.fill: parent
+      blocked: popupBody.inputActiveFocus
       onCloseRequested: root.close()
       onTabRequested: function(direction) { root.switchPanel(direction) }
       onTextKey: function(key) {
