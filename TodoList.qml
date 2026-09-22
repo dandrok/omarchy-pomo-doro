@@ -23,12 +23,14 @@ Item {
   property bool expanded: false
   readonly property bool inputActiveFocus: inputField.activeFocus
   readonly property int totalCount: todoModel.count
-  readonly property int pendingCount: {
+  property int completedCount: 0
+
+  function updateCompletedCount() {
     var count = 0
     for (var i = 0; i < todoModel.count; i++) {
-      if (!todoModel.get(i).done) count++
+      if (todoModel.get(i).done === true) count++
     }
-    return count
+    completedCount = count
   }
 
   implicitWidth: contentColumn.implicitWidth
@@ -52,6 +54,7 @@ Item {
             })
           }
         }
+        root.updateCompletedCount()
       }
     } catch (e) {}
   }
@@ -80,6 +83,7 @@ Item {
     })
     inputField.text = ""
     root.saveTodos()
+    root.updateCompletedCount()
   }
 
   ListModel {
@@ -122,7 +126,7 @@ Item {
         id: headerLabel
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
-        text: "TASKS" + (root.totalCount > 0 ? " (" + root.pendingCount + "/" + root.totalCount + ")" : "")
+        text: "TASKS" + (root.totalCount > 0 ? " (" + root.completedCount + "/" + root.totalCount + ")" : "")
       }
 
       Text {
@@ -183,6 +187,7 @@ Item {
             onClicked: {
               var currentDone = model.done
               todoModel.setProperty(index, "done", !currentDone)
+              root.updateCompletedCount()
               root.saveTodos()
             }
           }
@@ -246,6 +251,7 @@ Item {
               onClicked: function(mouse) {
                 mouse.accepted = true
                 todoModel.remove(index)
+                root.updateCompletedCount()
                 root.saveTodos()
               }
             }
