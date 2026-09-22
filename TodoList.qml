@@ -23,10 +23,10 @@ Item {
   property bool expanded: false
   readonly property bool inputActiveFocus: inputField.activeFocus
   readonly property int totalCount: todoModel.count
-  readonly property int pendingCount: {
+  readonly property int completedCount: {
     var count = 0
     for (var i = 0; i < todoModel.count; i++) {
-      if (!todoModel.get(i).done) count++
+      if (todoModel.get(i).done === true) count++
     }
     return count
   }
@@ -122,7 +122,7 @@ Item {
         id: headerLabel
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
-        text: "TASKS" + (root.totalCount > 0 ? " (" + root.pendingCount + "/" + root.totalCount + ")" : "")
+        text: "TASKS" + (root.totalCount > 0 ? " (" + root.completedCount + "/" + root.totalCount + ")" : "")
       }
 
       Text {
