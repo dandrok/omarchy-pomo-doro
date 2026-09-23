@@ -20,7 +20,8 @@ Item {
     return panel.todayCompleted + " / " + panel.dailyGoal
   }
 
-  readonly property bool inputActiveFocus: todoList.inputActiveFocus
+  property bool optionsExpanded: false
+  readonly property bool inputActiveFocus: todoList.inputActiveFocus || (tagInput && tagInput.activeFocus)
 
   Column {
     id: column
@@ -133,7 +134,312 @@ Item {
 
     PanelSeparator {}
 
-    PanelSectionHeader { text: panel.running ? "SESSION" : "START" }
+    // Header with chevron toggle for options when idle
+    Item {
+      width: parent.width
+      implicitHeight: Math.max(startHeader.implicitHeight, optionsChevron.implicitHeight)
+
+      PanelSectionHeader {
+        id: startHeader
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
+        text: panel.running ? "SESSION" : "START"
+      }
+
+      Row {
+        anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
+        spacing: Style.spacing.xs
+        visible: !panel.running
+
+        Text {
+          anchors.verticalCenter: parent.verticalCenter
+          text: panel.sessionFocus + "m · " + panel.sessionShortBreak + "m"
+            + (panel.sessionTag.trim() !== "" ? " · #" + panel.sessionTag.trim() : "")
+          color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.45)
+          font.family: Style.font.family
+          font.pixelSize: Style.font.caption
+        }
+
+        Text {
+          id: optionsChevron
+          anchors.verticalCenter: parent.verticalCenter
+          text: body.optionsExpanded ? "󰅃" : "󰅀"
+          color: Qt.darker(Color.foreground, 1.4)
+          font.family: Style.font.family
+          font.pixelSize: Style.font.body
+        }
+      }
+
+      MouseArea {
+        anchors.fill: parent
+        enabled: !panel.running
+        cursorShape: Qt.PointingHandCursor
+        onClicked: body.optionsExpanded = !body.optionsExpanded
+      }
+    }
+
+    // Expandable minimalist options (hidden by default)
+    Column {
+      id: optionsArea
+      width: parent.width
+      spacing: Style.spacing.sm
+      visible: !panel.running && body.optionsExpanded
+
+      // Compact tag input row
+      Row {
+        anchors.horizontalCenter: parent.horizontalCenter
+        spacing: Style.spacing.xs
+
+        Text {
+          anchors.verticalCenter: parent.verticalCenter
+          text: "#"
+          color: Color.accent
+          font.family: Style.font.family
+          font.pixelSize: Style.font.body
+          font.bold: true
+        }
+
+        TextField {
+          id: tagInput
+          width: Style.space(160)
+          placeholderText: "tag..."
+          text: panel.sessionTag
+          verticalPadding: Style.spacing.xxs
+          font.pixelSize: Style.font.bodySmall
+          onTextEdited: panel.sessionTag = text
+          onAccepted: panel.startSession()
+        }
+      }
+
+      // Minimalist stepper pills
+      Row {
+        width: parent.width
+        spacing: Style.spacing.xs
+
+        // Focus
+        Rectangle {
+          width: Math.floor((parent.width - parent.spacing * 2) / 3)
+          implicitHeight: Style.space(42)
+          radius: Style.cornerRadius
+          color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.04)
+          border.color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.1)
+          border.width: 1
+
+          Column {
+            anchors.centerIn: parent
+            spacing: Style.space(2)
+
+            Text {
+              anchors.horizontalCenter: parent.horizontalCenter
+              text: "FOCUS"
+              color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.45)
+              font.family: Style.font.family
+              font.pixelSize: Style.font.caption * 0.85
+              font.bold: true
+            }
+
+            Row {
+              anchors.horizontalCenter: parent.horizontalCenter
+              spacing: Style.spacing.xs
+
+              Text {
+                text: "−"
+                color: minusFocusMouse.containsMouse ? Color.accent : Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.6)
+                font.family: Style.font.family
+                font.pixelSize: Style.font.body
+                font.bold: true
+                anchors.verticalCenter: parent.verticalCenter
+
+                MouseArea {
+                  id: minusFocusMouse
+                  anchors.fill: parent
+                  anchors.margins: -Style.space(4)
+                  hoverEnabled: true
+                  cursorShape: Qt.PointingHandCursor
+                  onClicked: panel.sessionFocus = Math.max(5, panel.sessionFocus - 5)
+                }
+              }
+
+              Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: panel.sessionFocus + "m"
+                color: Color.popups.text
+                font.family: Style.font.family
+                font.pixelSize: Style.font.bodySmall
+                font.bold: true
+              }
+
+              Text {
+                text: "+"
+                color: plusFocusMouse.containsMouse ? Color.accent : Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.6)
+                font.family: Style.font.family
+                font.pixelSize: Style.font.body
+                font.bold: true
+                anchors.verticalCenter: parent.verticalCenter
+
+                MouseArea {
+                  id: plusFocusMouse
+                  anchors.fill: parent
+                  anchors.margins: -Style.space(4)
+                  hoverEnabled: true
+                  cursorShape: Qt.PointingHandCursor
+                  onClicked: panel.sessionFocus = Math.min(120, panel.sessionFocus + 5)
+                }
+              }
+            }
+          }
+        }
+
+        // Short break
+        Rectangle {
+          width: Math.floor((parent.width - parent.spacing * 2) / 3)
+          implicitHeight: Style.space(42)
+          radius: Style.cornerRadius
+          color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.04)
+          border.color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.1)
+          border.width: 1
+
+          Column {
+            anchors.centerIn: parent
+            spacing: Style.space(2)
+
+            Text {
+              anchors.horizontalCenter: parent.horizontalCenter
+              text: "SHORT"
+              color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.45)
+              font.family: Style.font.family
+              font.pixelSize: Style.font.caption * 0.85
+              font.bold: true
+            }
+
+            Row {
+              anchors.horizontalCenter: parent.horizontalCenter
+              spacing: Style.spacing.xs
+
+              Text {
+                text: "−"
+                color: minusShortMouse.containsMouse ? Color.accent : Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.6)
+                font.family: Style.font.family
+                font.pixelSize: Style.font.body
+                font.bold: true
+                anchors.verticalCenter: parent.verticalCenter
+
+                MouseArea {
+                  id: minusShortMouse
+                  anchors.fill: parent
+                  anchors.margins: -Style.space(4)
+                  hoverEnabled: true
+                  cursorShape: Qt.PointingHandCursor
+                  onClicked: panel.sessionShortBreak = Math.max(1, panel.sessionShortBreak - 1)
+                }
+              }
+
+              Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: panel.sessionShortBreak + "m"
+                color: Color.popups.text
+                font.family: Style.font.family
+                font.pixelSize: Style.font.bodySmall
+                font.bold: true
+              }
+
+              Text {
+                text: "+"
+                color: plusShortMouse.containsMouse ? Color.accent : Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.6)
+                font.family: Style.font.family
+                font.pixelSize: Style.font.body
+                font.bold: true
+                anchors.verticalCenter: parent.verticalCenter
+
+                MouseArea {
+                  id: plusShortMouse
+                  anchors.fill: parent
+                  anchors.margins: -Style.space(4)
+                  hoverEnabled: true
+                  cursorShape: Qt.PointingHandCursor
+                  onClicked: panel.sessionShortBreak = Math.min(30, panel.sessionShortBreak + 1)
+                }
+              }
+            }
+          }
+        }
+
+        // Long break
+        Rectangle {
+          width: Math.floor((parent.width - parent.spacing * 2) / 3)
+          implicitHeight: Style.space(42)
+          radius: Style.cornerRadius
+          color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.04)
+          border.color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.1)
+          border.width: 1
+
+          Column {
+            anchors.centerIn: parent
+            spacing: Style.space(2)
+
+            Text {
+              anchors.horizontalCenter: parent.horizontalCenter
+              text: "LONG"
+              color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.45)
+              font.family: Style.font.family
+              font.pixelSize: Style.font.caption * 0.85
+              font.bold: true
+            }
+
+            Row {
+              anchors.horizontalCenter: parent.horizontalCenter
+              spacing: Style.spacing.xs
+
+              Text {
+                text: "−"
+                color: minusLongMouse.containsMouse ? Color.accent : Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.6)
+                font.family: Style.font.family
+                font.pixelSize: Style.font.body
+                font.bold: true
+                anchors.verticalCenter: parent.verticalCenter
+
+                MouseArea {
+                  id: minusLongMouse
+                  anchors.fill: parent
+                  anchors.margins: -Style.space(4)
+                  hoverEnabled: true
+                  cursorShape: Qt.PointingHandCursor
+                  onClicked: panel.sessionLongBreak = Math.max(5, panel.sessionLongBreak - 5)
+                }
+              }
+
+              Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: panel.sessionLongBreak + "m"
+                color: Color.popups.text
+                font.family: Style.font.family
+                font.pixelSize: Style.font.bodySmall
+                font.bold: true
+              }
+
+              Text {
+                text: "+"
+                color: plusLongMouse.containsMouse ? Color.accent : Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.6)
+                font.family: Style.font.family
+                font.pixelSize: Style.font.body
+                font.bold: true
+                anchors.verticalCenter: parent.verticalCenter
+
+                MouseArea {
+                  id: plusLongMouse
+                  anchors.fill: parent
+                  anchors.margins: -Style.space(4)
+                  hoverEnabled: true
+                  cursorShape: Qt.PointingHandCursor
+                  onClicked: panel.sessionLongBreak = Math.min(60, panel.sessionLongBreak + 5)
+                }
+              }
+            }
+          }
+        }
+      }
+    }
 
     Flow {
       width: parent.width
@@ -184,8 +490,8 @@ Item {
         text: "Start focus"
         iconText: "󰐊"
         bordered: true
-        tooltipText: panel.defaultFocus + " min focus"
-          + (panel.defaultTag !== "" ? " · " + panel.defaultTag : "")
+        tooltipText: panel.sessionFocus + " min focus"
+          + (panel.sessionTag.trim() !== "" ? " · " + panel.sessionTag.trim() : (panel.defaultTag !== "" ? " · " + panel.defaultTag : ""))
         onClicked: panel.startSession()
       }
 
