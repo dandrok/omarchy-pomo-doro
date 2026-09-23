@@ -20,7 +20,89 @@ Item {
     return panel.todayCompleted + " / " + panel.dailyGoal
   }
 
-  readonly property bool inputActiveFocus: todoList.inputActiveFocus
+  property bool optionsExpanded: false
+  readonly property bool inputActiveFocus: todoList.inputActiveFocus || (tagInput && tagInput.activeFocus)
+
+  component DurationStepper: Rectangle {
+    id: stepper
+    required property string label
+    required property int value
+    required property int step
+    required property int min
+    required property int max
+    signal valueModified(int newValue)
+
+    width: Math.floor((parent.width - parent.spacing * 2) / 3)
+    implicitHeight: Style.space(42)
+    radius: Style.cornerRadius
+    color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.04)
+    border.color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.1)
+    border.width: 1
+
+    Column {
+      anchors.centerIn: parent
+      spacing: Style.space(2)
+
+      Text {
+        anchors.horizontalCenter: parent.horizontalCenter
+        text: stepper.label
+        color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.45)
+        font.family: Style.font.family
+        font.pixelSize: Style.font.caption * 0.85
+        font.bold: true
+      }
+
+      Row {
+        anchors.horizontalCenter: parent.horizontalCenter
+        spacing: Style.spacing.xs
+
+        Text {
+          text: "−"
+          color: minusMouse.containsMouse ? Color.accent : Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.6)
+          font.family: Style.font.family
+          font.pixelSize: Style.font.body
+          font.bold: true
+          anchors.verticalCenter: parent.verticalCenter
+
+          MouseArea {
+            id: minusMouse
+            anchors.fill: parent
+            anchors.margins: -Style.space(4)
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: stepper.valueModified(Math.max(stepper.min, stepper.value - stepper.step))
+          }
+        }
+
+        Text {
+          anchors.verticalCenter: parent.verticalCenter
+          text: stepper.value + "m"
+          color: Color.popups.text
+          font.family: Style.font.family
+          font.pixelSize: Style.font.bodySmall
+          font.bold: true
+        }
+
+        Text {
+          text: "+"
+          color: plusMouse.containsMouse ? Color.accent : Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.6)
+          font.family: Style.font.family
+          font.pixelSize: Style.font.body
+          font.bold: true
+          anchors.verticalCenter: parent.verticalCenter
+
+          MouseArea {
+            id: plusMouse
+            anchors.fill: parent
+            anchors.margins: -Style.space(4)
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: stepper.valueModified(Math.min(stepper.max, stepper.value + stepper.step))
+          }
+        }
+      }
+    }
+  }
 
   Column {
     id: column
@@ -133,7 +215,117 @@ Item {
 
     PanelSeparator {}
 
-    PanelSectionHeader { text: panel.running ? "SESSION" : "START" }
+    // Header with chevron toggle for options when idle
+    Item {
+      width: parent.width
+      implicitHeight: Math.max(startHeader.implicitHeight, optionsChevron.implicitHeight)
+
+      PanelSectionHeader {
+        id: startHeader
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
+        text: panel.running ? "SESSION" : "START"
+      }
+
+      Row {
+        anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
+        spacing: Style.spacing.xs
+        visible: !panel.running
+
+        Text {
+          anchors.verticalCenter: parent.verticalCenter
+          text: panel.sessionFocus + "m · " + panel.sessionShortBreak + "m"
+            + (panel.resolvedTag !== "" ? " · #" + panel.resolvedTag : "")
+          color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.45)
+          font.family: Style.font.family
+          font.pixelSize: Style.font.caption
+        }
+
+        Text {
+          id: optionsChevron
+          anchors.verticalCenter: parent.verticalCenter
+          text: body.optionsExpanded ? "󰅃" : "󰅀"
+          color: Qt.darker(Color.foreground, 1.4)
+          font.family: Style.font.family
+          font.pixelSize: Style.font.body
+        }
+      }
+
+      MouseArea {
+        anchors.fill: parent
+        enabled: !panel.running
+        cursorShape: Qt.PointingHandCursor
+        onClicked: body.optionsExpanded = !body.optionsExpanded
+      }
+    }
+
+    // Expandable minimalist options (hidden by default)
+    Column {
+      id: optionsArea
+      width: parent.width
+      spacing: Style.spacing.sm
+      visible: !panel.running && body.optionsExpanded
+
+      // Compact tag input row
+      Row {
+        anchors.horizontalCenter: parent.horizontalCenter
+        spacing: Style.spacing.xs
+
+        Text {
+          anchors.verticalCenter: parent.verticalCenter
+          text: "#"
+          color: Color.accent
+          font.family: Style.font.family
+          font.pixelSize: Style.font.body
+          font.bold: true
+        }
+
+        TextField {
+          id: tagInput
+          width: Style.space(160)
+          placeholderText: "tag..."
+          text: panel.sessionTag
+          verticalPadding: Style.spacing.xxs
+          font.pixelSize: Style.font.bodySmall
+          onTextEdited: panel.sessionTag = text
+          onAccepted: panel.startSession()
+        }
+      }
+
+      // Minimalist stepper pills
+      Row {
+        width: parent.width
+        spacing: Style.spacing.xs
+
+        DurationStepper {
+          label: "FOCUS"
+          value: panel.sessionFocus
+          step: 5
+          min: 5
+          max: 120
+          onValueModified: function(v) { panel.sessionFocus = v }
+        }
+
+        DurationStepper {
+          label: "SHORT"
+          value: panel.sessionShortBreak
+          step: 1
+          min: 1
+          max: 30
+          onValueModified: function(v) { panel.sessionShortBreak = v }
+        }
+
+        DurationStepper {
+          label: "LONG"
+          value: panel.sessionLongBreak
+          step: 5
+          min: 5
+          max: 60
+          onValueModified: function(v) { panel.sessionLongBreak = v }
+        }
+      }
+    }
 
     Flow {
       width: parent.width
@@ -184,8 +376,8 @@ Item {
         text: "Start focus"
         iconText: "󰐊"
         bordered: true
-        tooltipText: panel.defaultFocus + " min focus"
-          + (panel.defaultTag !== "" ? " · " + panel.defaultTag : "")
+        tooltipText: panel.sessionFocus + " min focus"
+          + (panel.resolvedTag !== "" ? " · " + panel.resolvedTag : "")
         onClicked: panel.startSession()
       }
 

@@ -50,6 +50,12 @@ Panel {
   readonly property int defaultLongBreak: setting("defaultLongBreak", 15)
   readonly property string defaultTag: setting("defaultTag", "")
 
+  property int sessionFocus: root.defaultFocus
+  property int sessionShortBreak: root.defaultShortBreak
+  property int sessionLongBreak: root.defaultLongBreak
+  property string sessionTag: root.defaultTag
+  readonly property string resolvedTag: root.sessionTag.trim()
+
   readonly property string terminalCommand: setting("terminalCommand",
     "uwsm-app -- xdg-terminal-exec --title=\"Pomo Doro\" -- " + root.cli)
 
@@ -165,12 +171,10 @@ Panel {
 
   function startSession() {
     var args = ["start",
-      "-w", String(root.defaultFocus),
-      "-b", String(root.defaultShortBreak),
-      "-l", String(root.defaultLongBreak)]
-    // An empty tag is not "no tag" to the CLI - it means "reuse the last one",
-    // which is the friendlier default for a one-click start.
-    if (root.defaultTag !== "") args = args.concat(["-t", root.defaultTag])
+      "-w", String(root.sessionFocus),
+      "-b", String(root.sessionShortBreak),
+      "-l", String(root.sessionLongBreak)]
+    if (root.resolvedTag !== "") args = args.concat(["-t", root.resolvedTag])
     root.run(args)
   }
 
