@@ -54,6 +54,7 @@ Panel {
   property int sessionShortBreak: root.defaultShortBreak
   property int sessionLongBreak: root.defaultLongBreak
   property string sessionTag: root.defaultTag
+  readonly property string resolvedTag: root.sessionTag.trim()
 
   readonly property string terminalCommand: setting("terminalCommand",
     "uwsm-app -- xdg-terminal-exec --title=\"Pomo Doro\" -- " + root.cli)
@@ -173,8 +174,7 @@ Panel {
       "-w", String(root.sessionFocus),
       "-b", String(root.sessionShortBreak),
       "-l", String(root.sessionLongBreak)]
-    var tagToUse = root.sessionTag.trim() !== "" ? root.sessionTag.trim() : root.defaultTag
-    if (tagToUse !== "") args = args.concat(["-t", tagToUse])
+    if (root.resolvedTag !== "") args = args.concat(["-t", root.resolvedTag])
     root.run(args)
   }
 

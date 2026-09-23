@@ -23,6 +23,87 @@ Item {
   property bool optionsExpanded: false
   readonly property bool inputActiveFocus: todoList.inputActiveFocus || (tagInput && tagInput.activeFocus)
 
+  component DurationStepper: Rectangle {
+    id: stepper
+    required property string label
+    required property int value
+    required property int step
+    required property int min
+    required property int max
+    signal valueModified(int newValue)
+
+    width: Math.floor((parent.width - parent.spacing * 2) / 3)
+    implicitHeight: Style.space(42)
+    radius: Style.cornerRadius
+    color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.04)
+    border.color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.1)
+    border.width: 1
+
+    Column {
+      anchors.centerIn: parent
+      spacing: Style.space(2)
+
+      Text {
+        anchors.horizontalCenter: parent.horizontalCenter
+        text: stepper.label
+        color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.45)
+        font.family: Style.font.family
+        font.pixelSize: Style.font.caption * 0.85
+        font.bold: true
+      }
+
+      Row {
+        anchors.horizontalCenter: parent.horizontalCenter
+        spacing: Style.spacing.xs
+
+        Text {
+          text: "−"
+          color: minusMouse.containsMouse ? Color.accent : Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.6)
+          font.family: Style.font.family
+          font.pixelSize: Style.font.body
+          font.bold: true
+          anchors.verticalCenter: parent.verticalCenter
+
+          MouseArea {
+            id: minusMouse
+            anchors.fill: parent
+            anchors.margins: -Style.space(4)
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: stepper.valueModified(Math.max(stepper.min, stepper.value - stepper.step))
+          }
+        }
+
+        Text {
+          anchors.verticalCenter: parent.verticalCenter
+          text: stepper.value + "m"
+          color: Color.popups.text
+          font.family: Style.font.family
+          font.pixelSize: Style.font.bodySmall
+          font.bold: true
+        }
+
+        Text {
+          text: "+"
+          color: plusMouse.containsMouse ? Color.accent : Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.6)
+          font.family: Style.font.family
+          font.pixelSize: Style.font.body
+          font.bold: true
+          anchors.verticalCenter: parent.verticalCenter
+
+          MouseArea {
+            id: plusMouse
+            anchors.fill: parent
+            anchors.margins: -Style.space(4)
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: stepper.valueModified(Math.min(stepper.max, stepper.value + stepper.step))
+          }
+        }
+      }
+    }
+  }
+
   Column {
     id: column
     anchors.left: parent.left
@@ -155,7 +236,7 @@ Item {
         Text {
           anchors.verticalCenter: parent.verticalCenter
           text: panel.sessionFocus + "m · " + panel.sessionShortBreak + "m"
-            + (panel.sessionTag.trim() !== "" ? " · #" + panel.sessionTag.trim() : "")
+            + (panel.resolvedTag !== "" ? " · #" + panel.resolvedTag : "")
           color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.45)
           font.family: Style.font.family
           font.pixelSize: Style.font.caption
@@ -217,226 +298,31 @@ Item {
         width: parent.width
         spacing: Style.spacing.xs
 
-        // Focus
-        Rectangle {
-          width: Math.floor((parent.width - parent.spacing * 2) / 3)
-          implicitHeight: Style.space(42)
-          radius: Style.cornerRadius
-          color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.04)
-          border.color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.1)
-          border.width: 1
-
-          Column {
-            anchors.centerIn: parent
-            spacing: Style.space(2)
-
-            Text {
-              anchors.horizontalCenter: parent.horizontalCenter
-              text: "FOCUS"
-              color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.45)
-              font.family: Style.font.family
-              font.pixelSize: Style.font.caption * 0.85
-              font.bold: true
-            }
-
-            Row {
-              anchors.horizontalCenter: parent.horizontalCenter
-              spacing: Style.spacing.xs
-
-              Text {
-                text: "−"
-                color: minusFocusMouse.containsMouse ? Color.accent : Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.6)
-                font.family: Style.font.family
-                font.pixelSize: Style.font.body
-                font.bold: true
-                anchors.verticalCenter: parent.verticalCenter
-
-                MouseArea {
-                  id: minusFocusMouse
-                  anchors.fill: parent
-                  anchors.margins: -Style.space(4)
-                  hoverEnabled: true
-                  cursorShape: Qt.PointingHandCursor
-                  onClicked: panel.sessionFocus = Math.max(5, panel.sessionFocus - 5)
-                }
-              }
-
-              Text {
-                anchors.verticalCenter: parent.verticalCenter
-                text: panel.sessionFocus + "m"
-                color: Color.popups.text
-                font.family: Style.font.family
-                font.pixelSize: Style.font.bodySmall
-                font.bold: true
-              }
-
-              Text {
-                text: "+"
-                color: plusFocusMouse.containsMouse ? Color.accent : Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.6)
-                font.family: Style.font.family
-                font.pixelSize: Style.font.body
-                font.bold: true
-                anchors.verticalCenter: parent.verticalCenter
-
-                MouseArea {
-                  id: plusFocusMouse
-                  anchors.fill: parent
-                  anchors.margins: -Style.space(4)
-                  hoverEnabled: true
-                  cursorShape: Qt.PointingHandCursor
-                  onClicked: panel.sessionFocus = Math.min(120, panel.sessionFocus + 5)
-                }
-              }
-            }
-          }
+        DurationStepper {
+          label: "FOCUS"
+          value: panel.sessionFocus
+          step: 5
+          min: 5
+          max: 120
+          onValueModified: function(v) { panel.sessionFocus = v }
         }
 
-        // Short break
-        Rectangle {
-          width: Math.floor((parent.width - parent.spacing * 2) / 3)
-          implicitHeight: Style.space(42)
-          radius: Style.cornerRadius
-          color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.04)
-          border.color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.1)
-          border.width: 1
-
-          Column {
-            anchors.centerIn: parent
-            spacing: Style.space(2)
-
-            Text {
-              anchors.horizontalCenter: parent.horizontalCenter
-              text: "SHORT"
-              color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.45)
-              font.family: Style.font.family
-              font.pixelSize: Style.font.caption * 0.85
-              font.bold: true
-            }
-
-            Row {
-              anchors.horizontalCenter: parent.horizontalCenter
-              spacing: Style.spacing.xs
-
-              Text {
-                text: "−"
-                color: minusShortMouse.containsMouse ? Color.accent : Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.6)
-                font.family: Style.font.family
-                font.pixelSize: Style.font.body
-                font.bold: true
-                anchors.verticalCenter: parent.verticalCenter
-
-                MouseArea {
-                  id: minusShortMouse
-                  anchors.fill: parent
-                  anchors.margins: -Style.space(4)
-                  hoverEnabled: true
-                  cursorShape: Qt.PointingHandCursor
-                  onClicked: panel.sessionShortBreak = Math.max(1, panel.sessionShortBreak - 1)
-                }
-              }
-
-              Text {
-                anchors.verticalCenter: parent.verticalCenter
-                text: panel.sessionShortBreak + "m"
-                color: Color.popups.text
-                font.family: Style.font.family
-                font.pixelSize: Style.font.bodySmall
-                font.bold: true
-              }
-
-              Text {
-                text: "+"
-                color: plusShortMouse.containsMouse ? Color.accent : Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.6)
-                font.family: Style.font.family
-                font.pixelSize: Style.font.body
-                font.bold: true
-                anchors.verticalCenter: parent.verticalCenter
-
-                MouseArea {
-                  id: plusShortMouse
-                  anchors.fill: parent
-                  anchors.margins: -Style.space(4)
-                  hoverEnabled: true
-                  cursorShape: Qt.PointingHandCursor
-                  onClicked: panel.sessionShortBreak = Math.min(30, panel.sessionShortBreak + 1)
-                }
-              }
-            }
-          }
+        DurationStepper {
+          label: "SHORT"
+          value: panel.sessionShortBreak
+          step: 1
+          min: 1
+          max: 30
+          onValueModified: function(v) { panel.sessionShortBreak = v }
         }
 
-        // Long break
-        Rectangle {
-          width: Math.floor((parent.width - parent.spacing * 2) / 3)
-          implicitHeight: Style.space(42)
-          radius: Style.cornerRadius
-          color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.04)
-          border.color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.1)
-          border.width: 1
-
-          Column {
-            anchors.centerIn: parent
-            spacing: Style.space(2)
-
-            Text {
-              anchors.horizontalCenter: parent.horizontalCenter
-              text: "LONG"
-              color: Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.45)
-              font.family: Style.font.family
-              font.pixelSize: Style.font.caption * 0.85
-              font.bold: true
-            }
-
-            Row {
-              anchors.horizontalCenter: parent.horizontalCenter
-              spacing: Style.spacing.xs
-
-              Text {
-                text: "−"
-                color: minusLongMouse.containsMouse ? Color.accent : Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.6)
-                font.family: Style.font.family
-                font.pixelSize: Style.font.body
-                font.bold: true
-                anchors.verticalCenter: parent.verticalCenter
-
-                MouseArea {
-                  id: minusLongMouse
-                  anchors.fill: parent
-                  anchors.margins: -Style.space(4)
-                  hoverEnabled: true
-                  cursorShape: Qt.PointingHandCursor
-                  onClicked: panel.sessionLongBreak = Math.max(5, panel.sessionLongBreak - 5)
-                }
-              }
-
-              Text {
-                anchors.verticalCenter: parent.verticalCenter
-                text: panel.sessionLongBreak + "m"
-                color: Color.popups.text
-                font.family: Style.font.family
-                font.pixelSize: Style.font.bodySmall
-                font.bold: true
-              }
-
-              Text {
-                text: "+"
-                color: plusLongMouse.containsMouse ? Color.accent : Qt.rgba(Color.popups.text.r, Color.popups.text.g, Color.popups.text.b, 0.6)
-                font.family: Style.font.family
-                font.pixelSize: Style.font.body
-                font.bold: true
-                anchors.verticalCenter: parent.verticalCenter
-
-                MouseArea {
-                  id: plusLongMouse
-                  anchors.fill: parent
-                  anchors.margins: -Style.space(4)
-                  hoverEnabled: true
-                  cursorShape: Qt.PointingHandCursor
-                  onClicked: panel.sessionLongBreak = Math.min(60, panel.sessionLongBreak + 5)
-                }
-              }
-            }
-          }
+        DurationStepper {
+          label: "LONG"
+          value: panel.sessionLongBreak
+          step: 5
+          min: 5
+          max: 60
+          onValueModified: function(v) { panel.sessionLongBreak = v }
         }
       }
     }
@@ -491,7 +377,7 @@ Item {
         iconText: "󰐊"
         bordered: true
         tooltipText: panel.sessionFocus + " min focus"
-          + (panel.sessionTag.trim() !== "" ? " · " + panel.sessionTag.trim() : (panel.defaultTag !== "" ? " · " + panel.defaultTag : ""))
+          + (panel.resolvedTag !== "" ? " · " + panel.resolvedTag : "")
         onClicked: panel.startSession()
       }
 
